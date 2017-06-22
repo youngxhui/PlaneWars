@@ -2,9 +2,10 @@
 
 import pygame
 import random
+import time
 
-WIDTH = 360
-HEIGHT = 600
+WIDTH = 480
+HEIGHT = 800
 
 SHOOT_PC = 0
 EnEMY_PC = 0
@@ -73,7 +74,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.right += self.move
 
     def shoot(self, bullet_img):
-        # time.sleep(0.1)
         bullet = Bullet(bullet_img, self.rect.midtop)
         self.bullets.add(bullet)
 
@@ -109,7 +109,7 @@ enemy_img = plane_img.subsurface(enemy_rect)
 enemies = pygame.sprite.Group()
 
 RUN = True
-
+time.sleep(5)
 while RUN:
     screen.fill(0)
     screen.blit(background, (0, 0))
@@ -155,8 +155,26 @@ while RUN:
         player.moveRight()
     if key_pressed[pygame.K_SPACE]:
         SHOOT_PC = SHOOT_PC + 1
-        if SHOOT_PC % 400 == 0:
+        if SHOOT_PC % 300 == 0:
             player.shoot(bullet_img)
+
+    pygame.display.update()
+
+    # 退出程序
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+
+GAMEOVER = True
+
+# 加载gameOver图片
+
+gameOver = pygame.image.load('resources/image/gameover.png')
+
+while GAMEOVER:
+    screen.fill(0)
+    screen.blit(gameOver, (0, 0))
 
     pygame.display.update()
 
