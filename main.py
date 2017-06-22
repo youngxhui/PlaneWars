@@ -40,9 +40,12 @@ class Bullet(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, plane_img, player_rect, player_position):
         pygame.sprite.Sprite.__init__(self)
-        self.img = plane_img.subsurface(player_rect)
-        self.rect = player_rect
+        self.image = []
+        for i in range(len(player_rect)):
+            self.image.append(plane_img.subsurface(player_rect[i]).convert_alpha())
+        self.rect = player_rect[0]
         self.rect.topleft = player_position
+        self.img_index = 0
         self.move = 1
         self.bullets = pygame.sprite.Group()
         self.is_hit = False
@@ -94,7 +97,13 @@ class Enemy(pygame.sprite.Sprite):
 
 # 加载player 飞机图片
 
-player_rect = pygame.Rect(0, 99, 102, 126)
+player_rect = [pygame.Rect(0, 99, 102, 126),
+               pygame.Rect(165, 360, 102, 126),
+               pygame.Rect(165, 234, 102, 126),
+               pygame.Rect(330, 624, 102, 126),
+               pygame.Rect(330, 498, 102, 126),
+               pygame.Rect(432, 624, 102, 126)]
+
 player_position = [100, 400]
 player = Player(plane_img, player_rect, player_position)
 
@@ -114,7 +123,9 @@ while RUN:
     screen.fill(0)
     screen.blit(background, (0, 0))
 
-    screen.blit(player.img, player.rect)
+    screen.blit(player.image[player.img_index], player.rect)
+    player.img_index = SHOOT_PC / 248
+
     if EnEMY_PC % 500 == 0:
         enemy_position = [random.randint(0, WIDTH - enemy_rect.width), 0]
         enemy = Enemy(enemy_img, enemy_position)
@@ -154,9 +165,11 @@ while RUN:
     if key_pressed[pygame.K_d] or key_pressed[pygame.K_RIGHT]:
         player.moveRight()
     if key_pressed[pygame.K_SPACE]:
-        SHOOT_PC = SHOOT_PC + 1
-        if SHOOT_PC % 300 == 0:
+        if SHOOT_PC % 495 == 0:
             player.shoot(bullet_img)
+        SHOOT_PC = SHOOT_PC + 1
+        if SHOOT_PC >= 495:
+            SHOOT_PC = 0
 
     pygame.display.update()
 
