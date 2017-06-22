@@ -109,7 +109,7 @@ enemy_img = plane_img.subsurface(enemy_rect)
 enemies = pygame.sprite.Group()
 
 RUN = True
-time.sleep(5)
+
 while RUN:
     screen.fill(0)
     screen.blit(background, (0, 0))
@@ -136,9 +136,9 @@ while RUN:
 
     enemies.draw(screen)
 
-    pygame.sprite.groupcollide(enemies, player.bullets, 1, 1)
+    pygame.sprite.groupcollide(enemies, player.bullets, 0.6, 0.8)
 
-    if pygame.sprite.collide_rect(enemy, player):
+    if pygame.sprite.collide_circle_ratio(0.6)(player, enemy):
         player.is_hit = True
         RUN = False
 
