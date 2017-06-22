@@ -1,11 +1,13 @@
 # coding=utf8
 
 import pygame
+import random
 
 WIDTH = 360
 HEIGHT = 600
 
 SHOOT_PC = 0
+EnEMY_PC = 0
 
 pygame.init()
 
@@ -26,7 +28,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image = bullet_image
         self.rect = self.image.get_rect()
         self.rect.midbottom = bullet_position
-        self.move = 1.1
+        self.move = 1
 
     def bulletMove(self):
         self.rect.top -= self.move
@@ -42,6 +44,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.topleft = player_position
         self.move = 1
         self.bullets = pygame.sprite.Group()
+        self.is_hit = False
 
     # player 移动
 
@@ -83,6 +86,10 @@ class Enemy(pygame.sprite.Sprite):
         self.image = enemy_img
         self.rect = self.image.get_rect()
         self.rect.topleft = enemy_position
+        self.move = 1
+
+    def enemyMove(self):
+        self.rect.top += self.move
 
 
 # 加载player 飞机图片
@@ -97,25 +104,43 @@ bullet_img = plane_img.subsurface(bullet_rect)
 
 # 加载敌机图片
 
-enemy_rect = pygame.Rect(534, 612, 57, 43)
+enemy_rect = pygame.Rect(267, 347, 57, 51)
 enemy_img = plane_img.subsurface(enemy_rect)
-enemy_position = [0, 0]
-enemy = Enemy(enemy_img, enemy_position)
+enemies = pygame.sprite.Group()
 
-while True:
+RUN = True
+
+while RUN:
     screen.fill(0)
     screen.blit(background, (0, 0))
 
     screen.blit(player.img, player.rect)
+    if EnEMY_PC % 500 == 0:
+        enemy_position = [random.randint(0, WIDTH - enemy_rect.width), 0]
+        enemy = Enemy(enemy_img, enemy_position)
+        enemies.add(enemy)
 
-    screen.blit(enemy_img, enemy_rect)
+    EnEMY_PC = EnEMY_PC + 1
 
     for bullet in player.bullets:
         bullet.bulletMove()
-        if bullet.rect.bottom < 0:
+        if bullet.rect.bottom <= 0:
             player.bullets.remove(bullet)
 
     player.bullets.draw(screen)
+
+    for enemy in enemies:
+        enemy.enemyMove()
+        if enemy.rect.top > HEIGHT:
+            enemies.remove(enemy)
+
+    enemies.draw(screen)
+
+    pygame.sprite.groupcollide(enemies, player.bullets, 1, 1)
+
+    if pygame.sprite.collide_rect(enemy, player):
+        player.is_hit = True
+        RUN = False
 
     # 获取键盘按键
     key_pressed = pygame.key.get_pressed()
