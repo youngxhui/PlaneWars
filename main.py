@@ -8,7 +8,9 @@ WIDTH = 480
 HEIGHT = 800
 
 SHOOT_PC = 0
-EnEMY_PC = 0
+ENEMY_PC = 0
+
+player_shoot = 0
 
 pygame.init()
 
@@ -29,7 +31,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image = bullet_image
         self.rect = self.image.get_rect()
         self.rect.midbottom = bullet_position
-        self.move = 1
+        self.move = 1.1
 
     def bulletMove(self):
         self.rect.top -= self.move
@@ -84,12 +86,14 @@ class Player(pygame.sprite.Sprite):
 # 敌机类
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, enemy_img, enemy_position):
+    def __init__(self, enemy_img, enemy_shoot_img, enemy_position):
         pygame.sprite.Sprite.__init__(self)
         self.image = enemy_img
         self.rect = self.image.get_rect()
         self.rect.topleft = enemy_position
+        self.shoot_imgs = enemy_shoot_img
         self.move = 1
+        self.shoot_index = 0
 
     def enemyMove(self):
         self.rect.top += self.move
@@ -113,9 +117,19 @@ bullet_img = plane_img.subsurface(bullet_rect)
 
 # 加载敌机图片
 
-enemy_rect = pygame.Rect(267, 347, 57, 51)
+enemy_rect = pygame.Rect(534, 612, 57, 43)
 enemy_img = plane_img.subsurface(enemy_rect)
 enemies = pygame.sprite.Group()
+
+# 加载敌机被击中图片
+enemies_shoot_img = [plane_img.subsurface(pygame.Rect(267, 347, 57, 43)),
+                     plane_img.subsurface(pygame.Rect(873, 697, 57, 43)),
+                     plane_img.subsurface(pygame.Rect(267, 296, 57, 43)),
+                     plane_img.subsurface(pygame.Rect(930, 697, 57, 43))]
+
+enemies = pygame.sprite.Group()
+
+enemies_shoot = pygame.sprite.Group()
 
 RUN = True
 
@@ -123,15 +137,25 @@ while RUN:
     screen.fill(0)
     screen.blit(background, (0, 0))
 
-    screen.blit(player.image[player.img_index], player.rect)
-    player.img_index = SHOOT_PC / 248
+    if not player.is_hit:
+        screen.blit(player.image[player.img_index], player.rect)
+        player.img_index = SHOOT_PC / 248
+    else:
+        player.img_index = player_shoot / 248
+        screen.blit(player.image[player.img_index], player.rect)
+        player_shoot += 31
+        if player_shoot > 1488:
+            RUN = False
+            time.sleep(1)
 
-    if EnEMY_PC % 500 == 0:
+    if ENEMY_PC % 500 == 0:
         enemy_position = [random.randint(0, WIDTH - enemy_rect.width), 0]
-        enemy = Enemy(enemy_img, enemy_position)
+        enemy = Enemy(enemy_img, enemies_shoot_img, enemy_position)
         enemies.add(enemy)
 
-    EnEMY_PC = EnEMY_PC + 1
+    ENEMY_PC = ENEMY_PC + 2
+    if ENEMY_PC == 1000:
+        ENEMY_PC = 0
 
     for bullet in player.bullets:
         bullet.bulletMove()
@@ -142,16 +166,37 @@ while RUN:
 
     for enemy in enemies:
         enemy.enemyMove()
+        if pygame.sprite.collide_circle_ratio(0.6)(player, enemy):
+            enemies_shoot.add(enemy)
+            enemies.remove(enemy)
+            player.is_hit = True
+            break
         if enemy.rect.top > HEIGHT:
             enemies.remove(enemy)
 
+    # for enemy_shoot in enemies_shoot:
+    #     if enemy_shoot.img_index == 0:
+    #         pass
+    #     if enemy_shoot.img_index > 7:
+    #         enemies_shoot.remove(enemy_shoot)
+    #         continue
+    #     screen.blit(enemy_shoot.shoot_imgs[enemy_shoot.img_index / 2])
+    #     enemy_shoot.img_index += 1
+    # enemies.draw(screen)
+
+    for enemy_down in enemies_shoot:
+        if enemy_down.shoot_index == 0:
+            pass
+        if enemy_down.shoot_index > 70:
+            enemies_shoot.remove(enemy_down)
+            continue
+        screen.blit(enemy_down.shoot_imgs[enemy_down.shoot_index / 20], enemy_down.rect)
+        enemy_down.shoot_index += 1
     enemies.draw(screen)
 
-    pygame.sprite.groupcollide(enemies, player.bullets, 0.6, 0.8)
-
-    if pygame.sprite.collide_circle_ratio(0.6)(player, enemy):
-        player.is_hit = True
-        RUN = False
+    enemies_is_shoot = pygame.sprite.groupcollide(enemies, player.bullets, 0.6, 0.8)
+    for enemy_shoot in enemies_is_shoot:
+        enemies_shoot.add(enemy_shoot)
 
     # 获取键盘按键
     key_pressed = pygame.key.get_pressed()
@@ -167,7 +212,7 @@ while RUN:
     if key_pressed[pygame.K_SPACE]:
         if SHOOT_PC % 495 == 0:
             player.shoot(bullet_img)
-        SHOOT_PC = SHOOT_PC + 1
+        SHOOT_PC = SHOOT_PC + 100
         if SHOOT_PC >= 495:
             SHOOT_PC = 0
 
