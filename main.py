@@ -3,7 +3,6 @@
 import pygame
 import random
 import time
-import math
 
 WIDTH = 480
 HEIGHT = 800
@@ -28,6 +27,8 @@ background = pygame.image.load('resources/image/background.png').convert()
 plane_img = pygame.image.load('resources/image/shoot.png')
 
 shootMusic = pygame.mixer.Sound('resources/sound/bullet.mp3')
+
+level_up_music = pygame.mixer.Sound('resources/sound/get_bomb.mp3')
 
 
 # 子弹对象
@@ -207,7 +208,9 @@ while RUN:
 
     if score == 100 * (level ** 2 + level):
         level += 1
-        enemy_add -= 25
+        level_up_music.play()
+        if level != 10:
+            enemy_add -= 20
 
     # 等级显示
     level_font = pygame.font.Font(None, 42)
